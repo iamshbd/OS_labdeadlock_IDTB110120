@@ -9,6 +9,7 @@ Both scripts frozed and never reached "Sync complete." sync_up successfully acqu
 Level4
 ![App Screenshot](image/dlevel4.png)
 The script successfully acquired the local Alpha lock, then froze while attempting to lock Player B's remote Beta vault. Meanwhile, Player B held their Beta lock and was waiting for my Alpha lock. Since both users held one resource and waited for the other's, a circular wait formed across two separate user accounts on the same server. Neither script could proceed without the other releasing first. This simulates a distributed denial of service because two independent systems become completely unresponsive — consuming resources and blocking all operations — without any malicious attack, simply due to poor lock ordering in the sync logic.
+
 Level5
 ![App Screenshot](image/dlevel5.png)
 By making both scripts always lock Alpha first and Beta second, the deadlock was eliminated. Before the fix, sync_up held Alpha and waited for Beta while sync_down held Beta and waited for Alpha — neither could proceed. After the fix, both scripts compete for Alpha first. Whoever wins Alpha gets Beta next and finishes. The loser simply waits for Alpha to become free, then proceeds safely. Since no script ever holds Beta while waiting for Alpha, the circular wait can never form.
