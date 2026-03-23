@@ -18,3 +18,6 @@ Level6
 ![App Screenshot](image/dlevel6.png)
 While sync_up was holding the Alpha lock, sync_timeout attempted to acquire the same lock with a 5 second timeout. Since it could not get the lock in time, it cleanly aborted with an error message instead of freezing forever. This timeout strategy is useful for server health because it prevents processes from hanging indefinitely — freeing up memory, CPU, and file descriptors. In a real server, a frozen process consumes resources and blocks other operations. With timeouts, the system can detect a potential deadlock early, abort gracefully, and retry the operation later without human intervention.
 
+Level7
+![App Screenshot](image/dlevel7.png)
+After running teardown, losetup -a | grep doung returns no results, confirming both vault images are fully detached from the kernel. The df -h | grep loop output shows no mounted filesystems belonging to my account, proving both virtual drives were cleanly unmounted. Proper teardown is critical for system stability because leaving loop devices mounted after use wastes kernel resources and can corrupt the filesystem inside the image file. If the image is deleted or moved while still mounted, it leaves orphaned loop devices in the kernel that cannot be cleaned up without root access, potentially blocking other users on the shared server from creating new loop devices.
