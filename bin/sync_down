@@ -1,0 +1,11 @@
+#!/bin/bash
+(
+echo "[Sync_DOWN] Acquiring Alpha lock first (Global Order)..."
+flock -x 200
+echo "[Sync_DOWN] Vault Alpha locked. Acquiring Beta lock..."
+flock -x 201
+echo "[Sync_DOWN] Both locks acquired. Syncing data..."
+sleep 1
+echo "[Sync_DOWN] Sync complete. Releasing locks."
+) 200>$HOME/os-lab-deadlock/lockfile_alpha \
+  201>$HOME/os-lab-deadlock/lockfile_beta

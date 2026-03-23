@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "Unmounting virtual vaults..."
+
+udisksctl unmount -b /dev/loop31
+udisksctl unmount -b /dev/loop32
+
+echo "Detaching loop devices..."
+
+udisksctl loop-delete -b /dev/loop31
+udisksctl loop-delete -b /dev/loop32
+
+echo "Removing symlinks..."
+
+rm ~/os-lab-deadlock/mount_alpha
+rm ~/os-lab-deadlock/mount_beta
+
+echo "Teardown complete!"

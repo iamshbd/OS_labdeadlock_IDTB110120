@@ -1,0 +1,13 @@
+#!/bin/bash
+(
+echo "[Cross_Alpha] Locking LOCAL Vault Alpha..."
+flock -x 200
+echo "[Cross_Alpha] Local lock acquired. Sleeping..."
+sleep 2
+echo "[Cross_Alpha] Locking REMOTE Vault Beta (Player B)..."
+flock -x 201
+echo "[Cross_Alpha] Both locks acquired. Syncing..."
+sleep 1
+echo "[Cross_Alpha] Sync complete. Releasing locks."
+) 200>$HOME/os-lab-deadlock/public_dr_alpha/vault.lock \
+  201>/home/g11-khy-gio/os-lab-deadlock/public_dr_beta/vault.lock
