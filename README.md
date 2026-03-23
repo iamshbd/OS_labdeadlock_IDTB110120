@@ -1,0 +1,23 @@
+# OS_labdeadlock_IDTB110120
+Level1
+![App Screenshot](image/dlevel1.png)
+Both virtual drives are successfully mounted as loopback devices. /dev/loop52 represents vault_alpha and /dev/loop56 represents vault_beta. Each has 5.4MB total capacity with 4.7MB available because the ext4 filesystem was formatted correctly and the drives are live and accessible by the OS.ext4 uses some space for its own internal structures like the journal, inode tables, and superblocks which is completely normal.
+Level2
+![App Screenshot](image/dlevel3.png)
+Both scripts frozed and never reached "Sync complete." sync_up successfully acquired the Alpha lock (fd 200) first, then requested the Beta lock (fd 201). At the same time, sync_down successfully acquired the Beta lock (fd 201) first, then requested the Alpha lock (fd 200). Neither script would release its held lock until it acquired the second one — creating a classic Circular Wait. The ps aux output confirms both processes (PIDs 998699/998700 for sync_up and 998705/998706 for sync_down) were alive but permanently suspended, consuming resources without making any progress.
+
+Level4
+![App Screenshot](image/dlevel4.png)
+The script successfully acquired the local Alpha lock, then froze while attempting to lock Player B's remote Beta vault. Meanwhile, Player B held their Beta lock and was waiting for my Alpha lock. Since both users held one resource and waited for the other's, a circular wait formed across two separate user accounts on the same server. Neither script could proceed without the other releasing first. This simulates a distributed denial of service because two independent systems become completely unresponsive — consuming resources and blocking all operations — without any malicious attack, simply due to poor lock ordering in the sync logic.
+
+Level5
+![App Screenshot](image/dlevel5.png)
+By making both scripts always lock Alpha first and Beta second, the deadlock was eliminated. Before the fix, sync_up held Alpha and waited for Beta while sync_down held Beta and waited for Alpha — neither could proceed. After the fix, both scripts compete for Alpha first. Whoever wins Alpha gets Beta next and finishes. The loser simply waits for Alpha to become free, then proceeds safely. Since no script ever holds Beta while waiting for Alpha, the circular wait can never form.
+
+Level6
+![App Screenshot](image/dlevel6.png)
+While sync_up was holding the Alpha lock, sync_timeout attempted to acquire the same lock with a 5 second timeout. Since it could not get the lock in time, it cleanly aborted with an error message instead of freezing forever. This timeout strategy is useful for server health because it prevents processes from hanging indefinitely — freeing up memory, CPU, and file descriptors. In a real server, a frozen process consumes resources and blocks other operations. With timeouts, the system can detect a potential deadlock early, abort gracefully, and retry the operation later without human intervention.
+
+Level7
+![App Screenshot](image/dlevel7.png)
+After running teardown, losetup -a | grep doung returns no results, confirming both vault images are fully detached from the kernel. The df -h | grep loop output shows no mounted filesystems belonging to my account, proving both virtual drives were cleanly unmounted. Proper teardown is critical for system stability because leaving loop devices mounted after use wastes kernel resources and can corrupt the filesystem inside the image file. If the image is deleted or moved while still mounted, it leaves orphaned loop devices in the kernel that cannot be cleaned up without root access, potentially blocking other users on the shared server from creating new loop devices.
